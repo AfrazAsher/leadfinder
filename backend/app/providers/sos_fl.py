@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from rapidfuzz import fuzz
 
@@ -141,24 +141,56 @@ def parse_fl_detail_html(html: str) -> dict:
         "filing_date": None,
     }
 
-    title_span = soup.find("span", class_=re.compile(r"entityName|title", re.I))
-    if title_span:
-        out["entity_name"] = title_span.get_text(strip=True)
+    # --- Entity name: real HTML uses <div class="detailSection corporationName">
+    # with two <p> children (first is type label, second is name). Synthetic
+    # HTML uses <span class="entityName">.
+    corp_div = soup.find("div", class_=re.compile(r"corporationName", re.I))
+    if corp_div:
+        paragraphs = corp_div.find_all("p")
+        if len(paragraphs) >= 2:
+            out["entity_name"] = paragraphs[-1].get_text(strip=True)
+        elif paragraphs:
+            out["entity_name"] = paragraphs[0].get_text(strip=True)
+    if not out["entity_name"]:
+        title_span = soup.find("span", class_=re.compile(r"entityName|title", re.I))
+        if title_span:
+            out["entity_name"] = title_span.get_text(strip=True)
 
+    # --- Filing information: real HTML has <label for="Detail_DocumentId">…
+    # pairs. Synthetic uses <div class="detailSection"><label>Document Number
+    # </label>VALUE</div>.
+    for label in soup.find_all("label"):
+        for_attr = label.get("for") or ""
+        if not for_attr.startswith("Detail_"):
+            continue
+        value_elem = label.find_next_sibling("span")
+        if not value_elem:
+            continue
+        value = value_elem.get_text(strip=True)
+        if for_attr == "Detail_DocumentId":
+            out["filing_number"] = value
+        elif for_attr == "Detail_Status":
+            out["status"] = value
+        elif for_attr == "Detail_FileDate":
+            out["filing_date"] = value
+
+    # Synthetic fallback for filing fields.
     for section in soup.find_all("div", class_=re.compile(r"detailSection")):
+        if section.find("label", attrs={"for": True}):
+            continue  # Real filingInformation block, already handled.
         label_elem = section.find(["label", "span", "h3"])
         if not label_elem:
             continue
         label_text = label_elem.get_text(strip=True)
         label = label_text.lower()
 
-        if "document number" in label:
+        if "document number" in label and out["filing_number"] is None:
             value = section.get_text(strip=True).replace(label_text, "").strip()
             out["filing_number"] = value
         elif label == "status" and out["status"] is None:
             value = section.get_text(strip=True).replace(label_text, "").strip()
             out["status"] = value
-        elif "filing date" in label or "date filed" in label:
+        elif ("filing date" in label or "date filed" in label) and out["filing_date"] is None:
             value = section.get_text(strip=True).replace(label_text, "").strip()
             out["filing_date"] = value
 
@@ -170,21 +202,56 @@ def parse_fl_detail_html(html: str) -> dict:
     return out
 
 
+def _clean_address_lines(lines: list[str], kind_exclude: str = "") -> list[str]:
+    """Drop empty lines, header echoes, 'Changed:' timestamps."""
+    result: list[str] = []
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+        low = s.lower()
+        if kind_exclude and kind_exclude in low:
+            continue
+        if low.startswith(("changed:", "name changed:", "address changed:")):
+            continue
+        result.append(s)
+    return result
+
+
+def _pick_address_body(header):
+    """Given a header tag, return the element containing the address text.
+
+    Real HTML: header is <span>Principal Address</span>; next sibling is a
+    <span> that wraps an inner <div> with <br>-separated address lines.
+    Synthetic HTML: header is <h3>Principal Address</h3>; next sibling is a
+    plain <div> containing the address.
+    """
+    sib = header.find_next_sibling(["span", "div"])
+    if sib:
+        if sib.name == "span":
+            nested = sib.find("div")
+            if nested:
+                return nested
+            return sib
+        return sib
+    # Fallback to parent container.
+    return header.find_parent("div")
+
+
 def _extract_address_block(soup, kind: str) -> Optional[dict]:
+    kind_lower = kind.lower()
     header = soup.find(
         lambda tag: tag.name in ("h3", "span", "label")
-        and kind.lower() in tag.get_text(strip=True).lower()
+        and kind_lower in tag.get_text(strip=True).lower()
+        and "registered agent" not in tag.get_text(strip=True).lower()
     )
     if not header:
         return None
-    container = header.find_parent("div") or header.find_next_sibling("div")
-    if not container:
+    body = _pick_address_body(header)
+    if not body:
         return None
-    lines = [
-        line.strip()
-        for line in container.get_text("\n", strip=True).split("\n")
-        if line.strip() and kind.lower() not in line.lower()
-    ]
+    raw_lines = body.get_text("\n", strip=True).split("\n")
+    lines = _clean_address_lines(raw_lines, kind_exclude=kind_lower)
     if not lines:
         return None
     return parse_address_lines(lines)
@@ -197,14 +264,31 @@ def _extract_registered_agent(soup) -> Optional[dict]:
     )
     if not header:
         return None
+
+    # Real HTML: header <span> followed by <span>NAME</span>, then
+    # <span><div>ADDRESS</div></span>.
+    name_span = header.find_next_sibling("span")
+    if name_span:
+        name = name_span.get_text(strip=True)
+        addr_span = name_span.find_next_sibling("span")
+        if addr_span and addr_span.find("div"):
+            addr_body = addr_span.find("div")
+            addr_lines = _clean_address_lines(
+                addr_body.get_text("\n", strip=True).split("\n")
+            )
+            if name:
+                return {
+                    "name": name,
+                    "address": parse_address_lines(addr_lines) if addr_lines else None,
+                }
+
+    # Synthetic fallback: all lines under the parent <div>.
     container = header.find_parent("div") or header.find_next_sibling("div")
     if not container:
         return None
-    lines = [
-        line.strip()
-        for line in container.get_text("\n", strip=True).split("\n")
-        if line.strip() and "registered agent" not in line.lower()
-    ]
+    raw_lines = container.get_text("\n", strip=True).split("\n")
+    lines = _clean_address_lines(raw_lines)
+    lines = [line for line in lines if "registered agent" not in line.lower()]
     if not lines:
         return None
     return {
@@ -217,7 +301,7 @@ def _extract_officers_fl(soup) -> list[dict]:
     header = soup.find(
         lambda tag: tag.name in ("h3", "span", "label") and any(
             phrase in tag.get_text(strip=True).lower()
-            for phrase in ("authorized person", "officer/director", "officer")
+            for phrase in ("authorized person", "officer/director")
         )
     )
     if not header:
@@ -225,7 +309,58 @@ def _extract_officers_fl(soup) -> list[dict]:
     section = header.find_parent("div") or header.find_next_sibling("div")
     if not section:
         return []
+
     officers: list[dict] = []
+
+    # Real HTML: each officer is a <span>Title\u00a0<TITLE></span>, followed by
+    # NAME as a raw NavigableString, then <span><div>address</div></span>.
+    title_spans = section.find_all(
+        "span",
+        string=re.compile(r"^Title[\s\u00a0]", re.I),
+    )
+    for tspan in title_spans:
+        m = re.match(
+            r"^Title[\s\u00a0]+(.+)", tspan.get_text(strip=True), re.I
+        )
+        if not m:
+            continue
+        title = m.group(1).strip()
+
+        name_pieces: list[str] = []
+        addr_body = None
+        for sibling in tspan.next_siblings:
+            if isinstance(sibling, NavigableString):
+                text = str(sibling).strip()
+                if text:
+                    name_pieces.append(text)
+                continue
+            if sibling.name == "span":
+                span_text = sibling.get_text(strip=True)
+                if re.match(r"^Title[\s\u00a0]", span_text, re.I):
+                    break  # Next officer starts.
+                nested_div = sibling.find("div")
+                if nested_div:
+                    addr_body = nested_div
+                    break
+            # <br>, <b>, other tags → skip.
+
+        if not name_pieces:
+            continue
+        name = re.sub(r"\s+", " ", " ".join(name_pieces)).strip()
+
+        address = None
+        if addr_body is not None:
+            addr_lines = _clean_address_lines(
+                addr_body.get_text("\n", strip=True).split("\n")
+            )
+            address = parse_address_lines(addr_lines) if addr_lines else None
+
+        officers.append({"title": title, "name": name, "address": address})
+
+    if officers:
+        return officers
+
+    # Synthetic fallback: <div> blocks containing title tokens like MGR, MEMBER.
     title_pattern = re.compile(
         r"(MGR|MGRM|AMBR|PRES|VP|DIRECTOR|TRUSTEE|MEMBER)", re.I
     )

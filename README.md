@@ -18,3 +18,5 @@ uvicorn app.main:app --reload
 ## Stage
 
 Currently implemented: **Stage 0 — Data Cleaning**. Reads a CSV of property records, classifies rows (individual vs. entity vs. government/religious/probate/sentinel), normalizes entity names, deduplicates, and emits a `CleaningReport` of cleaned `CleanedEntity` records with source parcels.
+
+
