@@ -199,7 +199,7 @@ Produce two variants:
 
 **TRUNCATION DETECTION:**
 
-If `first_name` has length exactly 30 (upstream truncation signal), add `"truncated_source_name"` to the entity's quality_flags.
+If `first_name` has length exactly 30 (upstream truncation signal) AND `owner_name` is not longer than `first_name` (i.e., the full name was not recovered from `OWNER_NAME_1`), add `"truncated_source_name"` to the entity's quality_flags. When `OWNER_NAME_1` carries a longer, complete name, no data was lost and the flag is omitted.
 
 **ENTITY TYPE DETECTION:**
 

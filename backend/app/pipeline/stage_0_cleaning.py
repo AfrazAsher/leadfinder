@@ -142,6 +142,15 @@ def _detect_entity_type(normalized_upper: str) -> EntityType:
     if not tokens:
         return EntityType.OTHER
 
+    # Priority 1: TRUST keywords anywhere in the name.
+    # Catches "FIELDS FAMILY TRUST THE U/A DTD SEPTEMBER 10, 2018" and
+    # "COOK INVESTMENTS L P U/A TRUST COOK CHARITABLE REMAINDER" where the
+    # trust signal is buried mid-string and last-token logic misses it.
+    token_set = set(tokens)
+    if token_set & {"TRUST", "TR", "TRS"}:
+        return EntityType.TRUST
+
+    # Priority 2: Last-token suffix matching (then second-to-last).
     def _match(token: str) -> Optional[EntityType]:
         if token == "LLC":
             return EntityType.LLC
@@ -155,8 +164,6 @@ def _detect_entity_type(normalized_upper: str) -> EntityType:
             return EntityType.CORP
         if token == "LTD":
             return EntityType.LTD
-        if token in {"TRUST", "TR", "TRS"}:
-            return EntityType.TRUST
         if token in {"PARTNERSHIP", "P/S"}:
             return EntityType.PARTNERSHIP
         return None
@@ -169,7 +176,6 @@ def _detect_entity_type(normalized_upper: str) -> EntityType:
         if result is not None:
             return result
     return EntityType.OTHER
-
 
 def clean_csv(path: str) -> CleaningReport:
     df = pd.read_csv(path, dtype=str, keep_default_na=False, na_filter=False)
@@ -317,7 +323,11 @@ def clean_csv(path: str) -> CleaningReport:
         if 3 <= cleaned_len <= 8 and not (BUSINESS_KEYWORDS & _word_tokens(cleaned_display)):
             quality_flags.append("cryptic_name")
 
-        if any(len(item["first_name_raw"]) == 30 for item in group):
+        if any(
+            len(item["first_name_raw"]) == 30
+            and len(item["entity_name_raw"]) <= len(item["first_name_raw"])
+            for item in group
+        ):
             quality_flags.append("truncated_source_name")
 
         if not first_mailing.complete:

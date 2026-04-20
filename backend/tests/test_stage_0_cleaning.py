@@ -40,7 +40,8 @@ def test_treasure_valley_untruncated(report):
     tv = next(e for e in report.entities if "TREASURE VALLEY" in e.entity_name_normalized)
     assert tv.entity_name_cleaned == "TREASURE VALLEY INVESTMENTS LLC"
     assert tv.entity_type.value == "LLC"
-    assert "truncated_source_name" in tv.quality_flags
+    assert "truncated_source_name" not in tv.quality_flags
+    # OWNER_NAME_1 carried the full name; nothing was lost to truncation
 
 
 def test_rolator_is_priority(report):
