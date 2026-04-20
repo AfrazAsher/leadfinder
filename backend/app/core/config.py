@@ -10,12 +10,6 @@ class Settings(BaseSettings):
     environment: str = Field(default="development")
     log_level: str = Field(default="INFO")
 
-    # Optional now, required in later stages
-    supabase_url: Optional[str] = None
-    supabase_service_role_key: Optional[str] = None
-    supabase_anon_key: Optional[str] = None
-    database_url: Optional[str] = None
-
     google_api_key: Optional[str] = None
     google_search_engine_id: Optional[str] = None
     opencorporates_api_token: Optional[str] = None

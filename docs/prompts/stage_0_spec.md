@@ -8,14 +8,25 @@ I'm building LeadFinder — a tool that takes a CSV of property ownership record
 - Dependencies should be installable with: `pip install -e ".[dev]"` from the `backend/` directory, AFTER activating the user's existing `./venv/`
 - My OS: (Claude Code, detect from shell) — use cross-platform paths and commands where possible
 
+## Project scope (important for later stages)
+
+LeadFinder is a **single-user local research tool**, not a SaaS:
+
+- No database, no cloud storage, no auth
+- State lives in memory during a run; output is a temp CSV file
+- One pipeline runs at a time; no persistence across server restart
+- Client runs this locally or in their own container; we don't host it
+
+Stage 0 is pure logic (CSV → cleaned entities). It doesn't touch any of the above concerns. But future stages need to know the project is deliberately simple — no ORM, no queue, no Postgres.
+
 ## Tech stack (LOCKED — do not suggest alternatives)
 
 - Backend: Python 3.10 + FastAPI (async)
 - Package management: pip + pyproject.toml (PEP 621 style)
-- Database: Supabase Postgres (NOT connected yet — we add later)
-- File storage: Supabase Storage (NOT connected yet)
+- Database: None (in-memory state, single-process)
+- File storage: None (temp files only)
+- Hosting: Local / Docker (client deploys to their own infrastructure)
 - Frontend: Next.js 14 + shadcn/ui + Tailwind (NOT in this step — leave frontend/ as .gitkeep)
-- Hosting: Railway (backend) + Supabase (DB/storage)
 - Browser automation: Playwright Python (install as dependency; no scrapers yet)
 - Logging: structlog
 - Config: pydantic-settings v2
@@ -199,11 +210,22 @@ Produce two variants:
 
 **TRUNCATION DETECTION:**
 
-If `first_name` has length exactly 30 (upstream truncation signal) AND `owner_name` is not longer than `first_name` (i.e., the full name was not recovered from `OWNER_NAME_1`), add `"truncated_source_name"` to the entity's quality_flags. When `OWNER_NAME_1` carries a longer, complete name, no data was lost and the flag is omitted.
+Add `"truncated_source_name"` to quality_flags when BOTH `first_name` AND `owner_name` (OWNER_NAME_1 field) have length exactly 30. This indicates both fields hit the upstream 30-char limit and we don't have the full name.
+
+Rationale: `first_name` alone being 30 is not a useful signal because `OWNER_NAME_1` usually carries the full (non-truncated) name for such cases. The flag should only fire when we genuinely cannot recover the full name from either field.
 
 **ENTITY TYPE DETECTION:**
 
-Look at tokens of `entity_name_normalized`. Check last token, then second-to-last:
+Apply priority rules in order:
+
+**Priority 1 — TRUST keywords anywhere in the name (whole-word match):**
+If the set of tokens in `entity_name_normalized` intersects `{"TRUST", "TR", "TRS"}` → `TRUST`
+
+Rationale: complex trust names often end in dates or charitable-remainder clauses
+(e.g., `"FIELDS FAMILY TRUST THE U/A DTD SEPTEMBER 10, 2018"`). Trust detection
+must not depend on terminal-token position.
+
+**Priority 2 — Last-token suffix (then second-to-last):**
 
 - Ends with `LLC` → `LLC`
 - Ends with `LLLP` → `LLLP`
@@ -211,7 +233,6 @@ Look at tokens of `entity_name_normalized`. Check last token, then second-to-las
 - Ends with `INC` or `CORPORATION` → `INC`
 - Ends with `CORP` → `CORP`
 - Ends with `LTD` → `LTD`
-- Ends with `TRUST`, `TR`, `TRS` → `TRUST`
 - Ends with `PARTNERSHIP` or `P/S` → `PARTNERSHIP`
 - Otherwise → `OTHER`
 
@@ -227,7 +248,7 @@ Group kept entities by `entity_name_normalized`. For each group:
 **QUALITY FLAGS** (add to `quality_flags` list):
 
 - `"cryptic_name"` — entity_name_cleaned length 3–8 AND no BUSINESS_KEYWORD found in the name
-- `"truncated_source_name"` — original `first_name` was exactly 30 chars
+- `"truncated_source_name"` — original `first_name` was exactly 30 chars AND `owner_name` also was exactly 30 chars (both fields hit the truncation limit; full name unrecoverable)
 - `"mailing_address_incomplete"` — any of street/city/state/zip is None or blank after parsing
 - `"mailing_address_conflict"` — per above
 - `"trust_with_legal_boilerplate"` — `entity_type == TRUST` AND (`"U/A"` or `"DTD"` appears in entity_name_normalized)
@@ -373,7 +394,8 @@ def test_treasure_valley_untruncated(report):
     tv = next(e for e in report.entities if "TREASURE VALLEY" in e.entity_name_normalized)
     assert tv.entity_name_cleaned == "TREASURE VALLEY INVESTMENTS LLC"
     assert tv.entity_type.value == "LLC"
-    assert "truncated_source_name" in tv.quality_flags
+    # OWNER_NAME_1 recovered the full name (31 chars); flag should NOT fire
+    assert "truncated_source_name" not in tv.quality_flags
 
 def test_rolator_is_priority(report):
     rolator = next(e for e in report.entities if "ROLATOR" in e.entity_name_normalized)
@@ -417,17 +439,16 @@ class Settings(BaseSettings):
 
     environment: str = Field(default="development")
     log_level: str = Field(default="INFO")
+    max_parallel_entities: int = Field(default=8)
 
-    # Optional now, required in later stages
-    supabase_url: Optional[str] = None
-    supabase_service_role_key: Optional[str] = None
-    supabase_anon_key: Optional[str] = None
-    database_url: Optional[str] = None
-
-    google_api_key: Optional[str] = None
-    google_search_engine_id: Optional[str] = None
+    # External APIs (optional — pipeline degrades gracefully when absent).
+    # All will be wired into providers in later stages.
+    google_search_engine_id: Optional[str] = None    # already-created PSE cx id
+    serper_api_key: Optional[str] = None             # search results (LinkedIn discovery)
     opencorporates_api_token: Optional[str] = None
+    hunter_api_key: Optional[str] = None
     apollo_api_key: Optional[str] = None
+    zoominfo_api_token: Optional[str] = None         # stubbed; client provides
 
 settings = Settings()
 ```
@@ -464,7 +485,8 @@ uvicorn app.main:app --reload
 - DO NOT use uv, poetry, pipenv, or conda
 - DO NOT implement Stages 1–5
 - DO NOT build any frontend code
-- DO NOT connect to Supabase
+- DO NOT add a database, queue, or cloud storage integration
+- DO NOT build any auth/login system
 - DO NOT implement scrapers
 - DO NOT add CI/CD config
 - DO NOT add deps I didn't list
