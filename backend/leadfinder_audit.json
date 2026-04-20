@@ -1,0 +1,267 @@
+{
+  "run_id": "44909066",
+  "generated_at": "2026-04-20T10:22:14.537811Z",
+  "total_entities": 3,
+  "entities": [
+    {
+      "entity_name_cleaned": "DISNEY DESTINATIONS LLC",
+      "status": "resolved",
+      "sos_source": "fl_direct",
+      "sos_result": {
+        "filing_number": "L99000007022",
+        "entity_name": "DISNEY DESTINATIONS, LLC",
+        "status": "ACTIVE",
+        "principal_address": {
+          "street": "1375 East Buena Vista Dr 4th Floor North",
+          "city": "Lake Buena Vista",
+          "state": "FL",
+          "zip": "32830"
+        },
+        "mailing_address": {
+          "street": "500 S. Buena Vista Street",
+          "city": "Burbank",
+          "state": "CA",
+          "zip": "91521"
+        },
+        "registered_agent": {
+          "name": "CORPORATION SERVICE COMPANY",
+          "address": {
+            "street": "1201 HAYS STREET",
+            "city": "TALLAHASSEE",
+            "state": "FL",
+            "zip": "32301-2525"
+          }
+        },
+        "officers": [
+          {
+            "title": "Assistant Secretary",
+            "name": "SOLOMON, AARON H",
+            "address": {
+              "street": "1170 Celebration Blvd",
+              "city": "Celebration",
+              "state": "FL",
+              "zip": "34747"
+            }
+          },
+          {
+            "title": "Treasurer",
+            "name": "GOMEZ, CARLOS A",
+            "address": {
+              "street": "500 South Buena Vista St",
+              "city": "Burbank",
+              "state": "CA",
+              "zip": "91521"
+            }
+          },
+          {
+            "title": "Secretary",
+            "name": "GAVAZZI, CHAKIRA H",
+            "address": {
+              "street": "500 South Buena Vista St",
+              "city": "Burbank",
+              "state": "CA",
+              "zip": "91521"
+            }
+          },
+          {
+            "title": "Assistant Secretary",
+            "name": "YOUNG, LEE R",
+            "address": {
+              "street": "1170 Celebration Blvd",
+              "city": "Celebration",
+              "state": "FL",
+              "zip": "34747"
+            }
+          },
+          {
+            "title": "VP",
+            "name": "HELPER, STEPHEN",
+            "address": {
+              "street": "800 South Main St.",
+              "city": "Burbank",
+              "state": "CA",
+              "zip": "91506"
+            }
+          },
+          {
+            "title": "Sole Member",
+            "name": "Walt Disney Attractions Trust",
+            "address": {
+              "street": "1375 Buena Vista Dr 4th Floor North",
+              "city": "Lake Buena Vista",
+              "state": "FL",
+              "zip": "32830"
+            }
+          },
+          {
+            "title": "Assistant Secretary",
+            "name": "Flores, Jonathan L.",
+            "address": {
+              "street": "1375 East Buena Vista Dr 4th Floor North",
+              "city": "Lake Buena Vista",
+              "state": "FL",
+              "zip": "32830"
+            }
+          },
+          {
+            "title": "Assistant Secretary",
+            "name": "Gothelf , Aaron M",
+            "address": {
+              "street": "1375 East Buena Vista Dr 4th Floor North",
+              "city": "Lake Buena Vista",
+              "state": "FL",
+              "zip": "32830"
+            }
+          },
+          {
+            "title": "Assistant Secretary",
+            "name": "Lawrence, Brian",
+            "address": {
+              "street": "1375 East Buena Vista Dr 4th Floor North",
+              "city": "Lake Buena Vista",
+              "state": "FL",
+              "zip": "32830"
+            }
+          },
+          {
+            "title": "Assistant Secretary",
+            "name": "Bourff , Natalie",
+            "address": {
+              "street": "1375 East Buena Vista Dr 4th Floor North",
+              "city": "Lake Buena Vista",
+              "state": "FL",
+              "zip": "32830"
+            }
+          }
+        ],
+        "filing_date": "10/25/1999",
+        "source_url": "https://search.sunbiz.org/Inquiry/CorporationSearch/SearchResultDetail?inquirytype=EntityName&directionType=Initial&searchNameOrder=DISNEYDESTINATIONS%20L990000070222&aggregateId=flal-l99000007022-1294f8b4-a7e2-4162-b4d2-08fe03fbfb5c&searchTerm=DISNEY%20DESTINATIONS%20LLC&listNameOrder=DISNEYDESTINATIONS%20L990000070222"
+      },
+      "selection": {
+        "chosen_index": 5,
+        "chosen_officer": {
+          "name": "Walt Disney Attractions Trust",
+          "title": "Sole Member",
+          "address": {
+            "street": "1375 Buena Vista Dr 4th Floor North",
+            "city": "Lake Buena Vista",
+            "state": "FL",
+            "zip": "32830"
+          }
+        },
+        "title_priority_score": 100,
+        "reasoning": "Highest priority match in title 'Sole Member': priority score 100"
+      },
+      "confidence": {
+        "final_score": 0.9,
+        "tier": "HIGH",
+        "components": {
+          "source_reliability": 0.9,
+          "status_multiplier": 1.0,
+          "title_normalized": 1.0,
+          "completeness": 1.0
+        }
+      }
+    },
+    {
+      "entity_name_cleaned": "UNIVERSAL CITY DEVELOPMENT PARTNERS LTD",
+      "status": "resolved",
+      "sos_source": "fl_direct",
+      "sos_result": {
+        "filing_number": "A02000000634",
+        "entity_name": "UNIVERSAL CITY DEVELOPMENT PARTNERS, LTD.",
+        "status": "ACTIVE",
+        "principal_address": {
+          "street": "1000 UNIVERSAL STUDIOS PLAZA",
+          "city": "ORLANDO",
+          "state": "FL",
+          "zip": "32819"
+        },
+        "mailing_address": {
+          "street": "100 Universal City Plaza",
+          "city": "Universal City",
+          "state": "CA",
+          "zip": "91608"
+        },
+        "registered_agent": {
+          "name": "C T CORPORATION SYSTEM",
+          "address": {
+            "street": "1200 SOUTH PINE ISLAND ROAD",
+            "city": "PLANTATION",
+            "state": "FL",
+            "zip": "33324"
+          }
+        },
+        "officers": [],
+        "filing_date": "04/29/2002",
+        "source_url": "https://search.sunbiz.org/Inquiry/CorporationSearch/SearchResultDetail?inquirytype=EntityName&directionType=Initial&searchNameOrder=UNIVERSALCITYDEVELOPMENTPARTNE%20A020000006341&aggregateId=domlp-a02000000634-68570b9b-fbe1-4849-8c41-a89cb82ef89a&searchTerm=UNIVERSAL%20CITY%20DEVELOPMENT%20PARTNERS%20LTD&listNameOrder=UNIVERSALCITYDEVELOPMENTPARTNE%20A020000006340"
+      },
+      "selection": {
+        "chosen_index": null,
+        "chosen_officer": null,
+        "title_priority_score": 0,
+        "reasoning": "SOS returned entity but no officers listed"
+      },
+      "confidence": {
+        "final_score": 0.0,
+        "tier": "blank",
+        "components": {
+          "source_reliability": 0.9,
+          "status_multiplier": 1.0,
+          "title_normalized": 0.0,
+          "completeness": 0.0
+        }
+      }
+    },
+    {
+      "entity_name_cleaned": "WALMART STORES EAST LP",
+      "status": "resolved",
+      "sos_source": "fl_direct",
+      "sos_result": {
+        "filing_number": "B01000000392",
+        "entity_name": "WAL-MART STORES EAST, LP",
+        "status": "ACTIVE",
+        "principal_address": {
+          "street": "1 Customer Dr",
+          "city": "BENTONVILLE",
+          "state": "AR",
+          "zip": "72716"
+        },
+        "mailing_address": {
+          "street": "1 Customer Dr",
+          "city": "BENTONVILLE",
+          "state": "AR",
+          "zip": "72716"
+        },
+        "registered_agent": {
+          "name": "C T CORPORATION SYSTEM",
+          "address": {
+            "street": "1200 SOUTH PINE ISLAND ROAD",
+            "city": "PLANTATION",
+            "state": "FL",
+            "zip": "33324"
+          }
+        },
+        "officers": [],
+        "filing_date": "11/16/2001",
+        "source_url": "https://search.sunbiz.org/Inquiry/CorporationSearch/SearchResultDetail?inquirytype=EntityName&directionType=Initial&searchNameOrder=WALMARTSTORESEAST%20B010000003920&aggregateId=forlp-b01000000392-75f27301-6b28-4ea9-9b19-d37d5d4c1968&searchTerm=WALMART%20STORES%20EAST&listNameOrder=WALMARTSTORESEAST%20B010000003920"
+      },
+      "selection": {
+        "chosen_index": null,
+        "chosen_officer": null,
+        "title_priority_score": 0,
+        "reasoning": "SOS returned entity but no officers listed"
+      },
+      "confidence": {
+        "final_score": 0.0,
+        "tier": "blank",
+        "components": {
+          "source_reliability": 0.9,
+          "status_multiplier": 1.0,
+          "title_normalized": 0.0,
+          "completeness": 0.0
+        }
+      }
+    }
+  ]
+}

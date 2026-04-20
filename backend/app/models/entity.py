@@ -60,8 +60,10 @@ class CleanedEntity(BaseModel):
     final_parent_company: Optional[str] = None
     final_website: Optional[str] = None
     final_job_title: Optional[str] = None
+    final_address: Optional[dict] = None
     final_linkedin: Optional[str] = None
     final_email: Optional[str] = None
     final_phone: Optional[str] = None
-    final_confidence: Optional[str] = None
+    final_confidence: Optional[float] = None
+    final_tier: Optional[str] = None
     error_message: Optional[str] = None
