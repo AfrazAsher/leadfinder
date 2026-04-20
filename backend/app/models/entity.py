@@ -46,3 +46,22 @@ class CleanedEntity(BaseModel):
     filing_state_candidates: list[str] = []
     is_priority: bool = False
     quality_flags: list[str] = []
+
+    # --- Stage 3 (SOS Lookup) output ---
+    status: str = "pending"  # pending | in_progress | resolved | unenriched | failed
+    sos_results: list[dict] = []
+    sos_source: Optional[str] = None
+
+    # --- Stage 4 (Enrichment) output ---
+    contacts: list[dict] = []
+
+    # --- Stage 5 (Output) output ---
+    final_decision_maker: Optional[str] = None
+    final_parent_company: Optional[str] = None
+    final_website: Optional[str] = None
+    final_job_title: Optional[str] = None
+    final_linkedin: Optional[str] = None
+    final_email: Optional[str] = None
+    final_phone: Optional[str] = None
+    final_confidence: Optional[str] = None
+    error_message: Optional[str] = None

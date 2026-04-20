@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     environment: str = Field(default="development")
     log_level: str = Field(default="INFO")
+    max_parallel_entities: int = Field(default=8)
 
     google_api_key: Optional[str] = None
     google_search_engine_id: Optional[str] = None
