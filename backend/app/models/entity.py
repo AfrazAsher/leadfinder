@@ -39,6 +39,7 @@ class CleanedEntity(BaseModel):
     entity_name_cleaned: str
     entity_name_normalized: str
     entity_name_search: Optional[str] = None
+    search_name_variants: list[str] = []
     entity_type: EntityType
     mailing_address: MailingAddress
     source_parcels: list[SourceParcel]
