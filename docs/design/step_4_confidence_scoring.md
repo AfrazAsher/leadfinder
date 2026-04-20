@@ -81,7 +81,6 @@ Every piece of extracted data carries a score based on:
 | --------------------------------- | -------------------- | --------------------------------------- |
 | Direct SOS filing (FL/NC/WA/UT)   | 0.95                 | Official record, government-issued      |
 | TX SOSDirect (paid, stubbed v1)   | 0.95                 | Same, different state                   |
-| OpenCorporates                    | 0.75                 | Aggregator of SOS, possibly stale       |
 | CorporationWiki / Bizapedia       | 0.55                 | Derivative, stale, scraped              |
 | Company website (About/Team page) | 0.70                 | Usually truthful but self-reported      |
 | LinkedIn (via Serper search)      | 0.80                 | Actively maintained by person           |
@@ -153,7 +152,7 @@ Signals from the same upstream are **one** signal, not many.
 def independent_signal_count(sources_used: set[str]) -> int:
     groups = {
         "sos_direct": {"fl_sos", "nc_sos", "wa_sos", "ut_sos", "tx_sosdirect"},
-        "sos_aggregator": {"opencorporates", "corporationwiki", "bizapedia"},
+        "sos_aggregator": {"corporationwiki", "bizapedia"},
         "linkedin": {"serper_linkedin", "linkedin_scraper"},
         "b2b_enrichment": {"zoominfo", "apollo", "rocketreach"},
         "hunter_pattern": {"hunter"},

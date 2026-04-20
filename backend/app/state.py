@@ -29,8 +29,7 @@ class AppState:
 
 def init_quotas(state: AppState) -> None:
     state.quotas = {
-        "opencorporates": {"calls_made": 0, "calls_limit": 200},
-        "serper":         {"calls_made": 0, "calls_limit": 2500},
-        "hunter":         {"calls_made": 0, "calls_limit": 25},
-        "apollo":         {"calls_made": 0, "calls_limit": 60},
+        "serper": {"calls_made": 0, "calls_limit": 2500},
+        "hunter": {"calls_made": 0, "calls_limit": 25},
+        "apollo": {"calls_made": 0, "calls_limit": 60},
     }

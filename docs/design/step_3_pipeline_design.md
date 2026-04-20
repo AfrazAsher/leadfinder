@@ -265,11 +265,10 @@ for state in entity.filing_state_candidates:  # ["TX", "DE"]
         emit_log(f"[WARN] {state} SOS blocked, falling through")
         continue
 
-# Final fallback: OpenCorporates
-if not sos_result and try_consume_quota("opencorporates"):
-    sos_result = await providers["opencorporates"].search(
-        name=entity.search_names[0], jurisdiction="us_tx"
-    )
+# No OpenCorporates fallback in v1 — if all state scrapers fail,
+# entity becomes `unenriched`. OC is deferred to Stage 3c as an
+# optional last-resort fallback for rare cases where state scraping
+# returns nothing for all candidate states.
 
 entity.sos_results = sos_result or []
 entity.sos_source = source_label  # e.g., "FL_direct" or "OpenCorporates_fallback"
@@ -419,7 +418,6 @@ key = hashlib.sha256(
 | Source          | TTL     |
 | --------------- | ------- |
 | SOS lookups     | 30 days |
-| OpenCorporates  | 30 days |
 | Hunter / Apollo | 14 days |
 | Serper (search) | 7 days  |
 | Empty results   | 7 days  |
@@ -442,7 +440,6 @@ anyway, so "force refresh" is implicit.
 
 ```python
 app.state.quotas: dict[str, dict] = {
-    "opencorporates": {"calls_made": 0, "calls_limit": 200},
     "serper": {"calls_made": 0, "calls_limit": 2500},
     "hunter": {"calls_made": 0, "calls_limit": 25},
     "apollo": {"calls_made": 0, "calls_limit": 60},
@@ -571,14 +568,10 @@ Confidence scoring counts **independent** signals, not total sources.
 
 ```
 SOS filings (ground truth)
-    ├── FL Sunbiz (direct — Stage 3 build)
-    ├── NC SOS (direct)
-    ├── WA UBI (direct)
-    ├── UT Business Search (direct)
-    ├── OpenCorporates (aggregator) ─┐
-    │   └── CorporationWiki (derived)│ All from SOS upstream
-    │   └── Bizapedia (derived)      │ → 1 signal, not 3
-    └── TX SOSDirect (paid — stubbed v1)
+    ├── FL Sunbiz (direct — Stage 3a)
+    ├── NC SOS (direct — Stage 3a)
+    ├── WA UBI (direct — Stage 3b)
+    └── UT Business Search (direct — Stage 3b)
 
 Search (LinkedIn discovery)
     └── Serper (Google-proxy search)
@@ -635,3 +628,4 @@ run exists at a time. If it's set and not done, we're busy (409 path).
 - Fuzzy name matching + same-name collision disambiguation → Step 5
 - Folder layout, file-by-file responsibility → Step 6
 - Frontend UI flow details → frontend spec (late in build)
+- OpenCorporates fallback (Stage 3c; optional, only if state scrapers show real coverage gaps)

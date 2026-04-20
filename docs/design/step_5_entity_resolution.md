@@ -270,25 +270,18 @@ Match < 0.75 = different person; try next candidate or skip.
 When we find the same entity in multiple sources, we merge the data —
 but **we keep source attribution** so scoring knows where each value came from.
 
-Example: TX SOS + OpenCorporates + LinkedIn all return data on
+Example: FL Sunbiz + LinkedIn both return data on
 `ROLATOR & INDEPENDENCE LLC`.
 
 ```python
 entity.sos_results = [
     {
-        "source": "tx_sosdirect",
+        "source": "fl_direct",
         "filing_number": "0804278580",
         "status": "Active",
         "principal_office": {...},
         "officers": [
             {"name": "Sivaramaiah Kondru", "title": "Managing Member"},
-        ],
-    },
-    {
-        "source": "opencorporates",
-        "filing_number": "0804278580",  # same filing — confirms
-        "officers": [
-            {"name": "SIVARAMAIAH KONDRU", "title": "Manager"},  # same person
         ],
     },
 ]

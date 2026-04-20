@@ -16,6 +16,8 @@ dependencies = [
     "pandas",
     "python-multipart",
     "playwright",
+    "beautifulsoup4>=4.12",
+    "rapidfuzz>=3.6",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +35,7 @@ include = ["app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = ["slow: browser-driving tests (require Playwright installed)"]
 
 [tool.ruff]
 line-length = 100
